@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "name": "Administrador",
+    "email": "admin@beautyclinic.com",
+    "password": "$2a$10$YKqEeJk9xQyJqw5U5VtQyOkKqEeJk9xQyJqw5U5VtQyO", // senha: admin123
+    "phone": "11999999999",
+    "role": "admin",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]

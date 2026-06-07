@@ -1,0 +1,17 @@
+backend/
+├── data/
+│   ├── users.json
+│   └── appointments.json
+├── middleware/
+│   └── auth.js
+├── routes/
+│   ├── auth.js
+│   ├── appointments.js
+│   └── services.js
+├── services/
+│   └── emailService.js
+├── utils/
+│   └── fileHandler.js
+├── .env
+├── server.js
+└── package.json
