@@ -3,9 +3,27 @@
     "id": 1,
     "name": "Administrador",
     "email": "admin@beautyclinic.com",
-    "password": "$2a$10$YKqEeJk9xQyJqw5U5VtQyOkKqEeJk9xQyJqw5U5VtQyO", // senha: admin123
+    "password": "$2a$10$YKqEeJk9xQyJqw5U5VtQyOkKqEeJk9xQyJqw5U5VtQyO",
     "phone": "11999999999",
     "role": "admin",
     "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 1781125363650,
+    "name": "Test ",
+    "email": "test@test.com",
+    "password": "$2a$10$KRNLncrAS9da4OIjwQ6Zj.sj5RNg6fbhgVgIpPeVqbrlnPJWWvxwm",
+    "phone": "21977448855",
+    "role": "client",
+    "createdAt": "2026-06-10T21:02:43.650Z"
+  },
+  {
+    "id": 1781125436948,
+    "name": "Test ",
+    "email": "test@beautyclinic.com",
+    "password": "$2a$10$.az52JPe.URldAUC3dOUZu1Q3ouNeUTHWAmSeu4TvJyZRatRv8yY6",
+    "phone": "21977448855",
+    "role": "client",
+    "createdAt": "2026-06-10T21:03:56.948Z"
   }
 ]

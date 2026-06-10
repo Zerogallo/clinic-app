@@ -1,6 +1,6 @@
 backend/
 ├── data/
-│   ├── users.json
+│   ├── users.json // senha: admin123
 │   └── appointments.json
 ├── middleware/
 │   └── auth.js
