@@ -1,37 +1,36 @@
 export interface User {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
-  phone?: string;
-  role: 'client' | 'admin';
-  createdAt: string;
-}
-
-export interface Service {
-  id: number;
-  title: string;
-  description: string;
-  duration: number;
-  price: number;
-  category: string;
-  icon: string;
-  color: string;
-}
-
-export interface Appointment {
-  id: number;
-  userId: number;
-  serviceId: number;
-  serviceName: string;
-  date: string;
-  time: string;
-  status: 'confirmed' | 'cancelled' | 'completed';
-  createdAt: string;
+  phone: string;
+  role: string;
+  createdAt?: string;
 }
 
 export interface RegisterData {
   name: string;
   email: string;
+  phone: string;
   password: string;
-  phone?: string;
+}
+
+export interface Service {
+  id: number;
+  name: string;
+  price: number;
+  duration: number;
+  description: string;
+  category?: string;
+}
+
+export interface Appointment {
+  id: string;
+  userId: string | number;
+  date: string;
+  time: string;
+  serviceId: number;
+  serviceName: string;
+  price: number;
+  status: string;
+  createdAt: string;
 }

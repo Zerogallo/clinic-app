@@ -8,6 +8,7 @@ interface AuthContextData {
   loading: boolean;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -28,8 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = await AsyncStorage.getItem('@BeautyClinic:token');
       const userData = await AsyncStorage.getItem('@BeautyClinic:user');
       
+      console.log('Carregando dados do storage...', { hasToken: !!token, hasUser: !!userData });
+      
       if (token && userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        api.defaults.headers.Authorization = `Bearer ${token}`;
+        console.log('Usuário carregado:', parsedUser.name);
+      } else {
+        console.log('Nenhum usuário logado');
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -40,24 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Tentando login:', email);
       const response = await api.post('/auth/login', { email, password });
       console.log('Resposta do login:', response.data);
       
-      // O backend retorna os dados dentro de 'data'
       const responseData = response.data;
       const token = responseData.token || responseData.data?.token;
       const userData = responseData.user || responseData.data?.user;
       
-      console.log('Token extraído:', token);
-      console.log('UserData extraído:', userData);
-      
       if (token && userData) {
         await AsyncStorage.setItem('@BeautyClinic:token', token);
         await AsyncStorage.setItem('@BeautyClinic:user', JSON.stringify(userData));
+        api.defaults.headers.Authorization = `Bearer ${token}`;
         setUser(userData);
+        console.log('Login bem sucedido:', userData.name);
         return { success: true };
       } else {
-        console.error('Token ou usuário não encontrado:', { token, userData });
+        console.error('Token ou usuário não encontrado');
         return { success: false, error: 'Resposta inválida do servidor' };
       }
     } catch (error: any) {
@@ -67,26 +74,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signIn = login;
+
   const register = async (data: RegisterData) => {
     try {
+      console.log('Tentando registrar:', data.email);
       const response = await api.post('/auth/register', data);
       console.log('Resposta do registro:', response.data);
       
-      // O backend retorna os dados dentro de 'data'
       const responseData = response.data;
       const token = responseData.token || responseData.data?.token;
       const userData = responseData.user || responseData.data?.user;
       
-      console.log('Token extraído:', token);
-      console.log('UserData extraído:', userData);
-      
       if (token && userData) {
         await AsyncStorage.setItem('@BeautyClinic:token', token);
         await AsyncStorage.setItem('@BeautyClinic:user', JSON.stringify(userData));
+        api.defaults.headers.Authorization = `Bearer ${token}`;
         setUser(userData);
+        console.log('Registro bem sucedido:', userData.name);
         return { success: true };
       } else {
-        console.error('Token ou usuário não encontrado:', { token, userData });
+        console.error('Token ou usuário não encontrado');
         return { success: false, error: 'Resposta inválida do servidor' };
       }
     } catch (error: any) {
@@ -98,16 +106,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('Iniciando logout...');
+      console.log('Usuário atual:', user?.name);
+      
+      // Limpar AsyncStorage
       await AsyncStorage.removeItem('@BeautyClinic:token');
       await AsyncStorage.removeItem('@BeautyClinic:user');
+      
+      // Limpar header do axios
+      delete api.defaults.headers.Authorization;
+      
+      // Limpar estado do usuário
+      setUser(null);
+      
+      console.log('Logout concluído, usuário:', null);
+      
+      // Verificar se removeu
+      const token = await AsyncStorage.getItem('@BeautyClinic:token');
+      const userData = await AsyncStorage.getItem('@BeautyClinic:user');
+      console.log('Verificação pós-logout - Token:', !!token, 'User:', !!userData);
+      
     } catch (error) {
-      console.error('Erro ao remover dados:', error);
+      console.error('Erro no logout:', error);
+      // Mesmo com erro, tentar resetar o estado
+      setUser(null);
     }
-    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, register, login, signIn, logout }}>
       {children}
     </AuthContext.Provider>
   );
