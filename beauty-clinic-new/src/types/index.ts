@@ -1,3 +1,18 @@
+export interface Product {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  price: number;
+  image: string;
+  rating: number;
+  reviews: number;
+  materials: string[];
+  duration: number;
+  category: string;
+  isFavorite?: boolean;
+}
+
 export interface User {
   id: string | number;
   name: string;
@@ -5,6 +20,7 @@ export interface User {
   phone: string;
   role: string;
   createdAt?: string;
+  favorites?: number[];
 }
 
 export interface RegisterData {

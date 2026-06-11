@@ -1,76 +1,276 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Image,
+  FlatList,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const services = [
+// Dados dos produtos/serviços
+const PRODUCTS: Product[] = [
   {
     id: 1,
-    title: "Despigmentação de sobrancelhas",
-    description: "Remoção de micropigmentação a laser e química, para despigmentar as sobrancelhas de forma saudáveis e segura. Protocolo personalizados com resultados garantidos.",
-    icon: "brush-outline"
+    title: "Remoção de Tatuagem",
+    subtitle: "Laser O Switcher",
+    description: "Tecnologia avançada para remoção de tatuagens indesejadas com segurança e eficácia. Procedimento indolor, sem cicatrizes e com resultados visíveis desde a primeira sessão.",
+    price: 299.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Remoção+de+Tatuagem",
+    rating: 4.8,
+    reviews: 127,
+    duration: 60,
+    materials: [
+      "Laser O Switcher de última geração",
+      "Óculos de proteção",
+      "Gel calmante pós-procedimento",
+      "Creme regenerador"
+    ],
+    category: "remoção"
   },
   {
     id: 2,
-    title: "Remoção de tatuagem",
-    description: "Tecnologia avançada para remover sua tatuagem com segurança e técnica.",
-    icon: "flash-outline"
+    title: "Despigmentação",
+    subtitle: "Sobrancelhas",
+    description: "Remoção de micropigmentação a laser e química para despigmentar as sobrancelhas de forma saudável e segura. Protocolos personalizados com resultados garantidos.",
+    price: 199.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Despigmentação",
+    rating: 4.9,
+    reviews: 89,
+    duration: 45,
+    materials: [
+      "Laser específico para pigmentos",
+      "Solução removedora química",
+      "Hidratante reparador",
+      "Protetor solar especial"
+    ],
+    category: "sobrancelhas"
   },
   {
     id: 3,
-    title: "Micropigmentação de sobrancelhas",
-    description: "Técnicas que elevam sua autoestima, trazendo naturalidade, destaque e harmonia ao olhar.",
-    icon: "eye-outline"
+    title: "Micropigmentação",
+    subtitle: "Sobrancelhas",
+    description: "Técnicas avançadas que elevam sua autoestima, trazendo naturalidade, destaque e harmonia ao olhar. Procedimento personalizado conforme seu rosto.",
+    price: 399.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Micropigmentação",
+    rating: 4.9,
+    reviews: 156,
+    duration: 90,
+    materials: [
+      "Pigmentos importados",
+      "Microagulhamento descartável",
+      "Anestésico tópico",
+      "Creme pós-procedimento"
+    ],
+    category: "sobrancelhas"
   },
   {
     id: 4,
-    title: "Revitalização labial",
-    description: "Uma técnica de pigmentação suave que realça a cor natural dos lábios, corrige pequenas assimetrias e devolve o aspecto saudável e delicado aos lábios",
-    icon: "heart-outline"
+    title: "Revitalização Labial",
+    subtitle: "Harmonização",
+    description: "Técnica de pigmentação suave que realça a cor natural dos lábios, corrige pequenas assimetrias e devolve o aspecto saudável e delicado aos lábios.",
+    price: 349.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Revitalização+Labial",
+    rating: 4.7,
+    reviews: 94,
+    duration: 60,
+    materials: [
+      "Pigmentos hidratantes",
+      "Anestésico labial",
+      "Hidratante reparador",
+      "Protetor labial"
+    ],
+    category: "labial"
   },
   {
     id: 5,
-    title: "Designer e reconstrução de sobrancelhas",
-    description: "Fort Brow é um protocolo avançado de reconstrução de sobrancelhas criados para recuperar fios, fortalece a estrutura da sobrancelha e devolve volume onde existe falha ou fragilidade.",
-    icon: "build-outline"
+    title: "Fort Brow",
+    subtitle: "Reconstrução de Sobrancelhas",
+    description: "Protocolo avançado de reconstrução de sobrancelhas criado para recuperar fios, fortalecer a estrutura e devolver volume onde existe falha ou fragilidade.",
+    price: 249.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Fort+Brow",
+    rating: 4.8,
+    reviews: 67,
+    duration: 60,
+    materials: [
+      "Soro fortificador",
+      "Minerais e vitaminas",
+      "Escova aplicadora",
+      "Manutenção domiciliar"
+    ],
+    category: "sobrancelhas"
   },
   {
     id: 6,
-    title: "Clareamento íntimo",
-    description: "Protocolo seguros para uniformizar e iluminar a pele das regiões escurecidas, como axila, virilha ou manchas.",
-    icon: "leaf-outline"
+    title: "Clareamento Íntimo",
+    subtitle: "Estética Íntima",
+    description: "Protocolos seguros para uniformizar e iluminar a pele das regiões escurecidas, como axila, virilha ou manchas. Resultados naturais e duradouros.",
+    price: 299.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Clareamento+Íntimo",
+    rating: 4.9,
+    reviews: 43,
+    duration: 45,
+    materials: [
+      "Cremes clareadores",
+      "Laser de baixa potência",
+      "Hidratante íntimo",
+      "Protetor solar específico"
+    ],
+    category: "estética"
   },
   {
     id: 7,
-    title: "Depilação laser",
-    description: "Conforto, eficiência e resultados duradouros.",
-    icon: "cut-outline"
+    title: "Depilação a Laser",
+    subtitle: "Remoção Definitiva",
+    description: "Conforto, eficiência e resultados duradouros. Tecnologia avançada para eliminar os pelos de forma definitiva e indolor.",
+    price: 149.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Depilação+a+Laser",
+    rating: 4.6,
+    reviews: 203,
+    duration: 30,
+    materials: [
+      "Laser de diodo",
+      "Gel refrigerante",
+      "Óculos de proteção",
+      "Creme pós-depilação"
+    ],
+    category: "depilação"
   },
   {
     id: 8,
-    title: "Facial",
-    description: "Limpeza facial protocolo de rejuvenescimento.",
-    icon: "happy-outline"
+    title: "Facial Rejuvenescimento",
+    subtitle: "Limpeza Profunda",
+    description: "Limpeza facial profunda e protocolo de rejuvenescimento que revitaliza sua pele, removendo impurezas e estimulando a produção de colágeno.",
+    price: 199.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Facial",
+    rating: 4.8,
+    reviews: 112,
+    duration: 50,
+    materials: [
+      "Produtos dermocosméticos",
+      "Água oxigenada",
+      "Extrator de cravos",
+      "Máscara revitalizante"
+    ],
+    category: "facial"
   },
   {
     id: 9,
-    title: "Brow lamination",
-    description: "Realinha e disciplina os fios das sobrancelhas, deixando os mais alinhados, preenchidos e com aparência de sobrancelha mais cheia e definida.",
-    icon: "water-outline"
+    title: "Brow Lamination",
+    subtitle: "Designer de Sobrancelhas",
+    description: "Realinhamento e disciplinamento dos fios das sobrancelhas, deixando-os mais alinhados, preenchidos e com aparência mais cheia e definida.",
+    price: 179.90,
+    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Brow+Lamination",
+    rating: 4.7,
+    reviews: 78,
+    duration: 45,
+    materials: [
+      "Produto de laminação",
+      "Fixador profissional",
+      "Pente modelador",
+      "Óleo nutritivo"
+    ],
+    category: "sobrancelhas"
   }
 ];
+
+interface Product {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  price: number;
+  image: string;
+  rating: number;
+  reviews: number;
+  materials: string[];
+  duration: number;
+  category: string;
+  isFavorite?: boolean;
+}
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const savedFavorites = await AsyncStorage.getItem('@BeautyClinic:favorites');
+      if (savedFavorites) {
+        const favIds = JSON.parse(savedFavorites);
+        setFavorites(favIds);
+        // Atualizar produtos com favoritos
+        setProducts(prev => prev.map(p => ({
+          ...p,
+          isFavorite: favIds.includes(p.id)
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar favoritos:', error);
+    }
+  };
+
+  const toggleFavorite = async (productId: number) => {
+    try {
+      let newFavorites;
+      if (favorites.includes(productId)) {
+        newFavorites = favorites.filter(id => id !== productId);
+      } else {
+        newFavorites = [...favorites, productId];
+      }
+      
+      setFavorites(newFavorites);
+      setProducts(prev => prev.map(p => ({
+        ...p,
+        isFavorite: newFavorites.includes(p.id)
+      })));
+      
+      await AsyncStorage.setItem('@BeautyClinic:favorites', JSON.stringify(newFavorites));
+    } catch (error) {
+      console.error('Erro ao salvar favorito:', error);
+    }
+  };
+
+  const renderProductCard = ({ item }: { item: Product }) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => navigation.navigate('ProductDetail' as never, { product: item } as never)}
+    >
+      <Image source={{ uri: item.image }} style={styles.cardImage} />
+      <TouchableOpacity 
+        style={styles.favoriteButton}
+        onPress={() => toggleFavorite(item.id)}
+      >
+        <Ionicons 
+          name={item.isFavorite ? 'heart' : 'heart-outline'} 
+          size={24} 
+          color={item.isFavorite ? '#ff4444' : '#fff'} 
+        />
+      </TouchableOpacity>
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+        <View style={styles.ratingContainer}>
+          <Ionicons name="star" size={16} color="#FFD700" />
+          <Text style={styles.ratingText}>{item.rating}</Text>
+          <Text style={styles.reviewsText}>({item.reviews} avaliações)</Text>
+        </View>
+        <Text style={styles.cardPrice}>R$ {item.price.toFixed(2)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -87,59 +287,46 @@ export const HomeScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
-        <Text style={styles.welcomeText}>Bem-vindo(a), {user?.name?.split(' ')[0]}!</Text>
-        <Text style={styles.tagline}>Especialistas em Remoção de Tatuagens</Text>
+        <Text style={styles.welcomeText}>Olá, {user?.name?.split(' ')[0]}! 👋</Text>
+        <Text style={styles.tagline}>Descubra os melhores tratamentos para você</Text>
       </View>
 
       {/* Laser Highlight */}
       <View style={styles.laserHighlight}>
         <View style={styles.laserIcon}>
-          <Ionicons name="flash" size={50} color="#FFD700" />
+          <Ionicons name="flash" size={40} color="#FFD700" />
         </View>
-        <Text style={styles.laserTitle}>Tecnologia de Ponta</Text>
-        <Text style={styles.laserName}>⚡ Laser O Switcher ⚡</Text>
-        <Text style={styles.laserDesc}>
-          Tecnologia avançada para remoção segura, eficaz e sem cicatrizes.
-          Resultados visíveis desde a primeira sessão!
-        </Text>
-        <View style={styles.laserFeatures}>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFD700" />
-            <Text style={styles.featureText}>Sem dor</Text>
-          </View>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFD700" />
-            <Text style={styles.featureText}>Sem cicatriz</Text>
-          </View>
-          <View style={styles.feature}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFD700" />
-            <Text style={styles.featureText}>Resultado rápido</Text>
-          </View>
+        <View style={styles.laserInfo}>
+          <Text style={styles.laserTitle}>Tecnologia Exclusiva</Text>
+          <Text style={styles.laserName}>⚡ Laser O Switcher</Text>
+          <Text style={styles.laserDesc}>Tecnologia avançada para remoção segura e eficaz</Text>
         </View>
       </View>
 
-      {/* Services Section */}
-      <View style={styles.servicesSection}>
-        <Text style={styles.sectionTitle}>💅 Nossos Serviços</Text>
-        
-        {services.map((service) => (
-          <View key={service.id} style={styles.serviceCard}>
-            <View style={styles.serviceIcon}>
-              <Ionicons name={service.icon as any} size={40} color="#764ba2" />
-            </View>
-            <View style={styles.serviceContent}>
-              <Text style={styles.serviceTitle}>{service.title}</Text>
-              <Text style={styles.serviceDesc}>{service.description}</Text>
-              <TouchableOpacity 
-                style={styles.bookButton}
-                onPress={() => navigation.navigate('Schedule' as never)}
-              >
-                <Text style={styles.bookButtonText}>Agendar</Text>
-                <Ionicons name="arrow-forward" size={16} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+      {/* Recomendados para você */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>✨ Recomendados para você</Text>
+        <FlatList
+          data={products}
+          renderItem={renderProductCard}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.productsList}
+        />
+      </View>
+
+      {/* Mais populares */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🔥 Mais Populares</Text>
+        <FlatList
+          data={[...products].sort((a, b) => b.reviews - a.reviews).slice(0, 5)}
+          renderItem={renderProductCard}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.productsList}
+        />
       </View>
     </ScrollView>
   );
@@ -199,111 +386,116 @@ const styles = StyleSheet.create({
   },
   laserHighlight: {
     backgroundColor: '#fff',
-    margin: 20,
-    padding: 25,
-    borderRadius: 20,
+    margin: 15,
+    padding: 20,
+    borderRadius: 15,
+    flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#764ba2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  laserIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f0e6ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  laserTitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
-  laserName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#764ba2',
-    marginVertical: 5,
-  },
-  laserDesc: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 10,
-    lineHeight: 20,
-  },
-  laserFeatures: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 20,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  featureText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: '#666',
-  },
-  servicesSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-  },
-  serviceCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-    flexDirection: 'row',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  serviceIcon: {
+  laserIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#f0e6ff',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 15,
   },
-  serviceContent: {
+  laserInfo: {
     flex: 1,
   },
-  serviceTitle: {
+  laserTitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  laserName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#764ba2',
+    marginVertical: 2,
+  },
+  laserDesc: {
+    fontSize: 12,
+    color: '#999',
+  },
+  section: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginHorizontal: 15,
+    marginBottom: 15,
+  },
+  productsList: {
+    paddingLeft: 15,
+    paddingRight: 5,
+  },
+  card: {
+    width: 280,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    marginRight: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#764ba2',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  cardContent: {
+    padding: 15,
+  },
+  cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  serviceDesc: {
+  cardSubtitle: {
     fontSize: 14,
     color: '#666',
-    lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  bookButton: {
-    backgroundColor: '#764ba2',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  bookButtonText: {
-    color: '#fff',
+  ratingText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 4,
     marginRight: 8,
+  },
+  reviewsText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  cardPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#764ba2',
   },
 });
