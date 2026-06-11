@@ -108,7 +108,7 @@ export const ProductDetailScreen = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header Image */}
       <View style={styles.imageContainer}>
-        <Image source={{ uri: product.image }} style={styles.productImage} />
+        <Image source={product.image} style={styles.productImage} />
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}

@@ -22,7 +22,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Laser O Switcher",
     description: "Tecnologia avançada para remoção de tatuagens indesejadas com segurança e eficácia. Procedimento indolor, sem cicatrizes e com resultados visíveis desde a primeira sessão.",
     price: 299.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Remoção+de+Tatuagem",
+    image: require("../assets/images/remocao-tatuagem.jpg"),
     rating: 4.8,
     reviews: 127,
     duration: 60,
@@ -40,7 +40,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Sobrancelhas",
     description: "Remoção de micropigmentação a laser e química para despigmentar as sobrancelhas de forma saudável e segura. Protocolos personalizados com resultados garantidos.",
     price: 199.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Despigmentação",
+    image: require("../assets/images/Despigmentacao.jpg"),
     rating: 4.9,
     reviews: 89,
     duration: 45,
@@ -58,7 +58,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Sobrancelhas",
     description: "Técnicas avançadas que elevam sua autoestima, trazendo naturalidade, destaque e harmonia ao olhar. Procedimento personalizado conforme seu rosto.",
     price: 399.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Micropigmentação",
+    image: require("../assets/images/Micropigmentacao.jpg"),
     rating: 4.9,
     reviews: 156,
     duration: 90,
@@ -76,7 +76,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Harmonização",
     description: "Técnica de pigmentação suave que realça a cor natural dos lábios, corrige pequenas assimetrias e devolve o aspecto saudável e delicado aos lábios.",
     price: 349.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Revitalização+Labial",
+    image: require("../assets/images/Revitalizacao-Labial.jpg"),
     rating: 4.7,
     reviews: 94,
     duration: 60,
@@ -94,7 +94,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Reconstrução de Sobrancelhas",
     description: "Protocolo avançado de reconstrução de sobrancelhas criado para recuperar fios, fortalecer a estrutura e devolver volume onde existe falha ou fragilidade.",
     price: 249.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Fort+Brow",
+    image: require("../assets/images/Fort-Brow.webp"),
     rating: 4.8,
     reviews: 67,
     duration: 60,
@@ -112,7 +112,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Estética Íntima",
     description: "Protocolos seguros para uniformizar e iluminar a pele das regiões escurecidas, como axila, virilha ou manchas. Resultados naturais e duradouros.",
     price: 299.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Clareamento+Íntimo",
+    image: require("../assets/images/peeling-intimo.jpeg"),
     rating: 4.9,
     reviews: 43,
     duration: 45,
@@ -130,7 +130,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Remoção Definitiva",
     description: "Conforto, eficiência e resultados duradouros. Tecnologia avançada para eliminar os pelos de forma definitiva e indolor.",
     price: 149.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Depilação+a+Laser",
+    image: require("../assets/images/Depilacao-a-Laser.png"),
     rating: 4.6,
     reviews: 203,
     duration: 30,
@@ -148,7 +148,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Limpeza Profunda",
     description: "Limpeza facial profunda e protocolo de rejuvenescimento que revitaliza sua pele, removendo impurezas e estimulando a produção de colágeno.",
     price: 199.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Facial",
+    image: require("../assets/images/Facial-Rejuvenescimento.webp"),
     rating: 4.8,
     reviews: 112,
     duration: 50,
@@ -166,7 +166,7 @@ const PRODUCTS: Product[] = [
     subtitle: "Designer de Sobrancelhas",
     description: "Realinhamento e disciplinamento dos fios das sobrancelhas, deixando-os mais alinhados, preenchidos e com aparência mais cheia e definida.",
     price: 179.90,
-    image: "https://via.placeholder.com/400x300/764ba2/fff?text=Brow+Lamination",
+    image: require("../assets/images/Brow-Lamination.png"),
     rating: 4.7,
     reviews: 78,
     duration: 45,
@@ -248,7 +248,7 @@ export const HomeScreen = () => {
       style={styles.card}
       onPress={() => navigation.navigate('ProductDetail' as never, { product: item } as never)}
     >
-      <Image source={{ uri: item.image }} style={styles.cardImage} />
+      <Image source={item.image} style={styles.cardImage} />
       <TouchableOpacity 
         style={styles.favoriteButton}
         onPress={() => toggleFavorite(item.id)}
