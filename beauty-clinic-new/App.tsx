@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -14,16 +14,19 @@ import { ProfileScreen } from './src/screens/ProfileScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
+import { EditProfileScreen } from './src/screens/EditProfileScreen';
 import Toast from 'react-native-toast-message';
 
-// Manter a splash screen visível
+// Manter a splash screen visível enquanto carrega
 SplashScreen.preventAutoHideAsync();
 
+// Definição dos tipos para as rotas
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
   ProductDetail: { product: any };
+  EditProfile: undefined;
 };
 
 export type TabParamList = {
@@ -125,9 +128,15 @@ function MainTabs() {
 // Stack principal do app (após login)
 function MainStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator 
+      screenOptions={{ 
+        headerShown: false,
+        contentStyle: { backgroundColor: '#f5f5f5' }
+      }}
+    >
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 }
@@ -151,11 +160,15 @@ function AuthStack() {
 function AppNavigator() {
   const { user, loading } = useAuth();
   
-  useEffect(() => {
+  const hideSplash = useCallback(async () => {
     if (!loading) {
-      SplashScreen.hideAsync();
+      await SplashScreen.hideAsync();
     }
   }, [loading]);
+
+  useEffect(() => {
+    hideSplash();
+  }, [hideSplash]);
   
   if (loading) {
     return <LoadingScreen />;

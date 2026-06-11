@@ -9,78 +9,163 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
-// Dados mock para quando a API não estiver disponível
-const MOCK_SERVICES = [
-  { id: 1, name: 'Remoção de Tatuagem - Laser O Switcher', price: 299.90, duration: 60, description: 'Tecnologia avançada' },
-  { id: 2, name: 'Despigmentação de Sobrancelhas', price: 199.90, duration: 45, description: 'Remoção a laser' },
-  { id: 3, name: 'Micropigmentação de Sobrancelhas', price: 399.90, duration: 90, description: 'Técnicas avançadas' },
-  { id: 4, name: 'Revitalização Labial', price: 349.90, duration: 60, description: 'Realce da cor natural' },
-  { id: 5, name: 'Reconstrução de Sobrancelhas', price: 249.90, duration: 60, description: 'Protocolo Fort Brow' },
-];
+// URL da API - ajuste conforme seu IP
+const API_URL = 'http://192.168.1.69:3333/api';
 
-const MOCK_TIMES = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+interface Service {
+  id: number;
+  name: string;
+  price: number;
+  duration: number;
+  description: string;
+}
+
+interface AvailableSlot {
+  date: string;
+  availableSlots: string[];
+  allSlots: string[];
+  bookedSlots: string[];
+  availableCount: number;
+}
 
 export const ScheduleScreen = () => {
-  const [selectedService, setSelectedService] = useState<any>(null);
+  const navigation = useNavigation();
+  const route = useRoute();
+  
+  // Receber parâmetros da navegação (vindo do ProductDetailScreen)
+  const params = route.params as any;
+  const preSelectedService = params?.selectedService || null;
+  
+  const [selectedService, setSelectedService] = useState<Service | null>(preSelectedService);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [services, setServices] = useState(MOCK_SERVICES);
+  const [services, setServices] = useState<Service[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState('');
-  
-  // Gerar próximas datas
-  const getNextDates = () => {
-    const dates = [];
+  const [showServicesModal, setShowServicesModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [userToken, setUserToken] = useState<string | null>(null);
+
+  // Gerar próximos 30 dias
+  const generateNextDays = () => {
+    const days = [];
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const dateString = date.toISOString().split('T')[0];
-      const formatted = date.toLocaleDateString('pt-BR');
-      const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-      dates.push({ dateString, formatted, weekday });
+      days.push({
+        dateString: date.toISOString().split('T')[0],
+        day: date.getDate(),
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
+        weekday: date.toLocaleDateString('pt-BR', { weekday: 'long' }),
+        formatted: date.toLocaleDateString('pt-BR'),
+      });
     }
-    return dates;
+    return days;
   };
 
-  const nextDates = getNextDates();
+  const nextDays = generateNextDays();
+
+  // Horários disponíveis padrão
+  const ALL_TIME_SLOTS = [
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+    '16:00', '16:30', '17:00', '17:30'
+  ];
+
+  // Dados mock para quando a API não estiver disponível
+  const MOCK_SERVICES: Service[] = [
+    { id: 1, name: 'Remoção de Tatuagem - Laser O Switcher', price: 299.90, duration: 60, description: 'Tecnologia avançada para remoção de tatuagens' },
+    { id: 2, name: 'Despigmentação de Sobrancelhas', price: 199.90, duration: 45, description: 'Remoção de micropigmentação a laser' },
+    { id: 3, name: 'Micropigmentação de Sobrancelhas', price: 399.90, duration: 90, description: 'Técnicas que elevam sua autoestima' },
+    { id: 4, name: 'Revitalização Labial', price: 349.90, duration: 60, description: 'Realce da cor natural dos lábios' },
+    { id: 5, name: 'Reconstrução de Sobrancelhas', price: 249.90, duration: 60, description: 'Protocolo Fort Brow' },
+    { id: 6, name: 'Clareamento Íntimo', price: 299.90, duration: 45, description: 'Uniformiza e ilumina a pele' },
+    { id: 7, name: 'Depilação a Laser', price: 149.90, duration: 30, description: 'Remoção definitiva' },
+    { id: 8, name: 'Facial Rejuvenescimento', price: 199.90, duration: 50, description: 'Limpeza facial profunda' },
+    { id: 9, name: 'Brow Lamination', price: 179.90, duration: 45, description: 'Designer de sobrancelhas' },
+  ];
 
   useEffect(() => {
-    loadServices();
+    loadUserToken();
+    fetchServices();
   }, []);
 
-  const loadServices = async () => {
+  const loadUserToken = async () => {
     try {
-      const response = await api.get('/services');
-      if (response.data && response.data.length > 0) {
-        setServices(response.data);
-      }
+      const token = await AsyncStorage.getItem('@BeautyClinic:token');
+      setUserToken(token);
+      console.log('Token carregado:', token ? 'Sim' : 'Não');
     } catch (error) {
-      console.log('Usando serviços mock');
-      // Já estamos usando MOCK_SERVICES como fallback
+      console.error('Erro ao carregar token:', error);
     }
   };
 
-  const handleServiceSelect = (service: any) => {
+  const fetchServices = async () => {
+    try {
+      console.log('Buscando serviços...');
+      const response = await fetch(`${API_URL}/services`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        setServices(data);
+        console.log('Serviços carregados da API:', data.length);
+      } else {
+        setServices(MOCK_SERVICES);
+        console.log('Usando serviços mock');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar serviços:', error);
+      setServices(MOCK_SERVICES);
+    }
+  };
+
+  const fetchAvailableTimes = async (date: string) => {
+    try {
+      console.log(`Buscando horários para: ${date}`);
+      const response = await fetch(`${API_URL}/available-slots/${date}`);
+      const data = await response.json();
+      
+      if (data.success && data.data?.availableSlots) {
+        setAvailableTimes(data.data.availableSlots);
+        console.log('Horários disponíveis:', data.data.availableSlots);
+      } else {
+        setAvailableTimes(ALL_TIME_SLOTS);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar horários:', error);
+      setAvailableTimes(ALL_TIME_SLOTS);
+    }
+  };
+
+  const handleSelectService = (service: Service) => {
     setSelectedService(service);
-    setModalVisible('');
+    setSelectedDate('');
+    setSelectedTime('');
+    setShowServicesModal(false);
   };
 
-  const handleDateSelect = (date: any) => {
+  const handleSelectDate = (date: any) => {
     setSelectedDate(date.dateString);
-    setModalVisible('');
+    setSelectedTime('');
+    fetchAvailableTimes(date.dateString);
+    setShowDateModal(false);
   };
 
-  const handleTimeSelect = (time: string) => {
+  const handleSelectTime = (time: string) => {
     setSelectedTime(time);
-    setModalVisible('');
+    setShowTimeModal(false);
   };
 
   const handleBooking = async () => {
+    // Validações
     if (!selectedService) {
       Alert.alert('Atenção', 'Por favor, selecione um serviço');
       return;
@@ -97,37 +182,85 @@ export const ScheduleScreen = () => {
     setLoading(true);
     
     try {
-      await api.post('/appointments', {
-        date: selectedDate,
-        time: selectedTime,
+      const token = await AsyncStorage.getItem('@BeautyClinic:token');
+      
+      if (!token) {
+        Alert.alert('Erro', 'Você precisa estar logado para agendar');
+        setLoading(false);
+        return;
+      }
+
+      const appointmentData = {
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         price: selectedService.price,
+        date: selectedDate,
+        time: selectedTime,
+        notes: ''
+      };
+
+      console.log('Enviando agendamento:', appointmentData);
+      console.log('Token:', token);
+
+      const response = await fetch(`${API_URL}/appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(appointmentData)
       });
 
-      Toast.show({
-        type: 'success',
-        text1: '✅ Agendamento Confirmado!',
-        text2: 'Enviamos os detalhes para seu email',
-        position: 'bottom',
-      });
+      const data = await response.json();
+      console.log('Resposta do servidor:', data);
 
-      // Resetar formulário
-      setSelectedService(null);
-      setSelectedDate('');
-      setSelectedTime('');
+      if (response.ok && data.success) {
+        Toast.show({
+          type: 'success',
+          text1: '✅ Agendamento Confirmado!',
+          text2: `Serviço: ${selectedService.name}\nData: ${new Date(selectedDate).toLocaleDateString('pt-BR')} às ${selectedTime}`,
+          position: 'bottom',
+          visibilityTime: 5000,
+        });
+
+        // Resetar formulário
+        setSelectedService(null);
+        setSelectedDate('');
+        setSelectedTime('');
+        
+        // Voltar para a tela inicial após 2 segundos
+        setTimeout(() => {
+          navigation.navigate('Home' as never);
+        }, 2000);
+      } else {
+        Alert.alert('Erro', data.error || 'Erro ao realizar agendamento');
+      }
       
     } catch (error: any) {
-      Alert.alert('Erro', error.response?.data?.error || 'Erro ao agendar');
+      console.error('Erro detalhado:', error);
+      Alert.alert('Erro', 'Não foi possível conectar ao servidor. Verifique sua conexão.');
     } finally {
       setLoading(false);
     }
   };
 
   const resetSelection = () => {
-    setSelectedService(null);
-    setSelectedDate('');
-    setSelectedTime('');
+    Alert.alert(
+      'Limpar seleção',
+      'Deseja realmente limpar todas as seleções?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Limpar', 
+          onPress: () => {
+            setSelectedService(null);
+            setSelectedDate('');
+            setSelectedTime('');
+          },
+          style: 'destructive'
+        }
+      ]
+    );
   };
 
   return (
@@ -150,7 +283,7 @@ export const ScheduleScreen = () => {
         
         <TouchableOpacity 
           style={styles.selectorButton}
-          onPress={() => setModalVisible('service')}
+          onPress={() => setShowServicesModal(true)}
         >
           <Ionicons name="cut-outline" size={24} color="#764ba2" />
           <Text style={styles.selectorText}>
@@ -173,7 +306,7 @@ export const ScheduleScreen = () => {
         )}
       </View>
 
-      {/* Passo 2: Data */}
+      {/* Passo 2: Data - Só aparece se serviço estiver selecionado */}
       {selectedService && (
         <View style={styles.card}>
           <View style={styles.stepHeader}>
@@ -185,7 +318,7 @@ export const ScheduleScreen = () => {
           
           <TouchableOpacity 
             style={styles.selectorButton}
-            onPress={() => setModalVisible('date')}
+            onPress={() => setShowDateModal(true)}
           >
             <Ionicons name="calendar-outline" size={24} color="#764ba2" />
             <Text style={styles.selectorText}>
@@ -196,7 +329,7 @@ export const ScheduleScreen = () => {
         </View>
       )}
 
-      {/* Passo 3: Horário */}
+      {/* Passo 3: Horário - Só aparece se data estiver selecionada */}
       {selectedDate && (
         <View style={styles.card}>
           <View style={styles.stepHeader}>
@@ -208,7 +341,7 @@ export const ScheduleScreen = () => {
           
           <TouchableOpacity 
             style={styles.selectorButton}
-            onPress={() => setModalVisible('time')}
+            onPress={() => setShowTimeModal(true)}
           >
             <Ionicons name="time-outline" size={24} color="#764ba2" />
             <Text style={styles.selectorText}>
@@ -219,7 +352,7 @@ export const ScheduleScreen = () => {
         </View>
       )}
 
-      {/* Botão Confirmar */}
+      {/* Botão Confirmar - Só aparece quando tudo estiver selecionado */}
       {selectedService && selectedDate && selectedTime && (
         <TouchableOpacity 
           style={styles.confirmButton}
@@ -237,33 +370,53 @@ export const ScheduleScreen = () => {
         </TouchableOpacity>
       )}
 
+      {/* Botão Reset - Só aparece quando algo está selecionado */}
+      {selectedService && (
+        <TouchableOpacity style={styles.resetButton} onPress={resetSelection}>
+          <Ionicons name="refresh-outline" size={20} color="#999" />
+          <Text style={styles.resetButtonText}>Limpar seleção</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Modal de Serviços */}
       <Modal
-        visible={modalVisible === 'service'}
+        visible={showServicesModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setModalVisible('')}
+        onRequestClose={() => setShowServicesModal(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Serviços Disponíveis</Text>
-              <TouchableOpacity onPress={() => setModalVisible('')}>
+              <TouchableOpacity onPress={() => setShowServicesModal(false)}>
                 <Ionicons name="close" size={28} color="#333" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
               {services.map((service) => (
                 <TouchableOpacity
                   key={service.id}
-                  style={styles.modalItem}
-                  onPress={() => handleServiceSelect(service)}
+                  style={[
+                    styles.modalItem,
+                    selectedService?.id === service.id && styles.modalItemSelected
+                  ]}
+                  onPress={() => handleSelectService(service)}
                 >
-                  <View>
-                    <Text style={styles.modalItemTitle}>{service.name}</Text>
-                    <Text style={styles.modalItemPrice}>R$ {service.price.toFixed(2)}</Text>
+                  <View style={styles.modalItemContent}>
+                    <Text style={[
+                      styles.modalItemTitle,
+                      selectedService?.id === service.id && styles.modalItemTextSelected
+                    ]}>
+                      {service.name}
+                    </Text>
+                    <Text style={styles.modalItemPrice}>
+                      R$ {service.price.toFixed(2)}
+                    </Text>
                   </View>
-                  <Ionicons name="arrow-forward" size={20} color="#764ba2" />
+                  {selectedService?.id === service.id && (
+                    <Ionicons name="checkmark-circle" size={24} color="#764ba2" />
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -273,39 +426,39 @@ export const ScheduleScreen = () => {
 
       {/* Modal de Datas */}
       <Modal
-        visible={modalVisible === 'date'}
+        visible={showDateModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setModalVisible('')}
+        onRequestClose={() => setShowDateModal(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Selecione uma Data</Text>
-              <TouchableOpacity onPress={() => setModalVisible('')}>
+              <TouchableOpacity onPress={() => setShowDateModal(false)}>
                 <Ionicons name="close" size={28} color="#333" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              {nextDates.map((date) => (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {nextDays.map((day) => (
                 <TouchableOpacity
-                  key={date.dateString}
+                  key={day.dateString}
                   style={[
                     styles.modalItem,
-                    selectedDate === date.dateString && styles.modalItemSelected
+                    selectedDate === day.dateString && styles.modalItemSelected
                   ]}
-                  onPress={() => handleDateSelect(date)}
+                  onPress={() => handleSelectDate(day)}
                 >
-                  <View>
+                  <View style={styles.modalItemContent}>
                     <Text style={[
                       styles.modalItemTitle,
-                      selectedDate === date.dateString && styles.modalItemTextSelected
+                      selectedDate === day.dateString && styles.modalItemTextSelected
                     ]}>
-                      {date.formatted}
+                      {day.formatted}
                     </Text>
-                    <Text style={styles.modalItemSubtitle}>{date.weekday}</Text>
+                    <Text style={styles.modalItemSubtitle}>{day.weekday}</Text>
                   </View>
-                  {selectedDate === date.dateString && (
+                  {selectedDate === day.dateString && (
                     <Ionicons name="checkmark-circle" size={24} color="#764ba2" />
                   )}
                 </TouchableOpacity>
@@ -317,28 +470,28 @@ export const ScheduleScreen = () => {
 
       {/* Modal de Horários */}
       <Modal
-        visible={modalVisible === 'time'}
+        visible={showTimeModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setModalVisible('')}
+        onRequestClose={() => setShowTimeModal(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Selecione um Horário</Text>
-              <TouchableOpacity onPress={() => setModalVisible('')}>
+              <TouchableOpacity onPress={() => setShowTimeModal(false)}>
                 <Ionicons name="close" size={28} color="#333" />
               </TouchableOpacity>
             </View>
             <View style={styles.timesGrid}>
-              {MOCK_TIMES.map((time) => (
+              {availableTimes.map((time) => (
                 <TouchableOpacity
                   key={time}
                   style={[
                     styles.timeButton,
                     selectedTime === time && styles.timeButtonSelected
                   ]}
-                  onPress={() => handleTimeSelect(time)}
+                  onPress={() => handleSelectTime(time)}
                 >
                   <Text style={[
                     styles.timeButtonText,
@@ -352,14 +505,6 @@ export const ScheduleScreen = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Botão Reset (opcional) */}
-      {selectedService && (
-        <TouchableOpacity style={styles.resetButton} onPress={resetSelection}>
-          <Ionicons name="refresh-outline" size={20} color="#999" />
-          <Text style={styles.resetButtonText}>Limpar seleção</Text>
-        </TouchableOpacity>
-      )}
     </ScrollView>
   );
 };
@@ -388,6 +533,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 5,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: '#fff',
@@ -460,7 +606,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#764ba2',
     marginHorizontal: 15,
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     padding: 18,
     borderRadius: 12,
     flexDirection: 'row',
@@ -524,10 +670,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
   },
+  modalItemContent: {
+    flex: 1,
+  },
   modalItemTitle: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+    marginBottom: 4,
   },
   modalItemSubtitle: {
     fontSize: 12,

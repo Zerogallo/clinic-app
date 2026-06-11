@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": 1781143661775,
+    "userId": 1781125436948,
+    "userName": "Test ",
+    "userEmail": "test@beautyclinic.com",
+    "userPhone": "21977448855",
+    "serviceId": 7,
+    "serviceName": "Depilação a Laser",
+    "price": 149.9,
+    "date": "2026-06-14",
+    "time": "09:00",
+    "notes": "",
+    "status": "confirmed",
+    "createdAt": "2026-06-11T02:07:41.775Z",
+    "updatedAt": "2026-06-11T02:07:41.775Z"
+  },
+  {
+    "id": 1781143984447,
+    "userId": 1781125436948,
+    "userName": "Test ",
+    "userEmail": "test@beautyclinic.com",
+    "userPhone": "21977448855",
+    "serviceId": 1,
+    "serviceName": "Remoção de Tatuagem",
+    "price": 299.9,
+    "date": "2026-06-18",
+    "time": "17:00",
+    "notes": "",
+    "status": "confirmed",
+    "createdAt": "2026-06-11T02:13:04.447Z",
+    "updatedAt": "2026-06-11T02:13:04.447Z"
+  }
+]

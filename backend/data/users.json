@@ -24,6 +24,19 @@
     "password": "$2a$10$.az52JPe.URldAUC3dOUZu1Q3ouNeUTHWAmSeu4TvJyZRatRv8yY6",
     "phone": "21977448855",
     "role": "client",
-    "createdAt": "2026-06-10T21:03:56.948Z"
+    "createdAt": "2026-06-10T21:03:56.948Z",
+    "updatedAt": "2026-06-11T01:07:37.565Z",
+    "profileImage": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fbeauty-clinic-new-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/e971d795-7150-4a9d-a9d9-b33ec53c7d4d.jpeg"
+  },
+  {
+    "id": 1781140153230,
+    "name": "Test 2",
+    "email": "test2@beautyclinic.com",
+    "password": "$2a$10$jjOwgayr1QywroJVp5UiMeFYgsgZwDCWvWnpH4ZyMIwSKVHP03D42",
+    "phone": "21933665544",
+    "profileImage": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fbeauty-clinic-new-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/6c1c5a4f-de0f-4e33-a830-c5ca403b3273.jpeg",
+    "role": "client",
+    "createdAt": "2026-06-11T01:09:13.230Z",
+    "updatedAt": "2026-06-11T01:17:58.322Z"
   }
 ]

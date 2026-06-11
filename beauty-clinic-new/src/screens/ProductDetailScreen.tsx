@@ -9,8 +9,27 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+
+// Definição dos tipos para navegação
+type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  MainTabs: undefined;
+  ProductDetail: { product: any };
+  EditProfile: undefined;
+};
+
+type TabParamList = {
+  Home: undefined;
+  Schedule: undefined;
+  Appointments: undefined;
+  Profile: undefined;
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
 
 interface Product {
   id: number;
@@ -28,7 +47,7 @@ interface Product {
 }
 
 export const ProductDetailScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { user } = useAuth();
   const { product } = route.params as { product: Product };
@@ -41,11 +60,30 @@ export const ProductDetailScreen = () => {
 
   const handleSchedule = () => {
     if (!user) {
-      Alert.alert('Atenção', 'Faça login para agendar');
-      navigation.navigate('Login' as never);
+      Alert.alert(
+        'Atenção',
+        'Faça login para agendar este serviço',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Fazer Login', onPress: () => navigation.navigate('Login') }
+        ]
+      );
       return;
     }
-    navigation.navigate('Schedule' as never);
+    
+    // Navegar para a tela de agendamento dentro do MainTabs
+    navigation.navigate('MainTabs', { 
+      screen: 'Schedule',
+      params: {
+        selectedService: {
+          id: product.id,
+          name: product.title,
+          price: product.price,
+          duration: product.duration,
+          description: product.description
+        }
+      }
+    });
   };
 
   const renderStars = (rating: number) => {

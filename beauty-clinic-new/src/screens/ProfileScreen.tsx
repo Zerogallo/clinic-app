@@ -5,11 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
-export const ProfileScreen = () => {
+export const ProfileScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
 
   const handleSignOut = () => {
@@ -17,33 +18,15 @@ export const ProfileScreen = () => {
       'Sair da Conta',
       'Tem certeza que deseja sair?',
       [
-        { 
-          text: 'Cancelar', 
-          style: 'cancel',
-          onPress: () => console.log('Cancelado')
-        },
-        { 
-          text: 'Sair', 
-          onPress: async () => {
-            try {
-              console.log('Botão sair pressionado');
-              await logout();
-              console.log('Logout executado com sucesso');
-              // O AuthContext vai atualizar automaticamente e redirecionar para o login
-            } catch (error) {
-              console.error('Erro no logout:', error);
-              Alert.alert('Erro', 'Não foi possível sair da conta');
-            }
-          },
-          style: 'destructive'
-        },
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', onPress: logout, style: 'destructive' },
       ]
     );
   };
 
   if (!user) {
     return (
-      <View style={styles.container}>
+      <View style={styles.centerContainer}>
         <Text>Carregando...</Text>
       </View>
     );
@@ -52,9 +35,29 @@ export const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={80} color="#764ba2" />
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.headerTitle}>Meu Perfil</Text>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Ionicons name="settings-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.profileInfo}>
+          <View style={styles.profileImageContainer}>
+            {user.profileImage ? (
+              <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.profileImagePlaceholder}>
+                <Ionicons name="person" size={50} color="#764ba2" />
+              </View>
+            )}
+          </View>
+          <Text style={styles.name}>{user.name}</Text>
+          <Text style={styles.email}>{user.email}</Text>
+        </View>
       </View>
 
       <View style={styles.infoCard}>
@@ -86,9 +89,12 @@ export const ProfileScreen = () => {
       </View>
 
       <View style={styles.menuCard}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={24} color="#764ba2" />
-          <Text style={styles.menuText}>Configurações</Text>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('EditProfile')}
+        >
+          <Ionicons name="person-outline" size={24} color="#764ba2" />
+          <Text style={styles.menuText}>Editar Perfil</Text>
           <Ionicons name="chevron-forward" size={20} color="#ccc" />
         </TouchableOpacity>
 
@@ -101,6 +107,12 @@ export const ProfileScreen = () => {
         <TouchableOpacity style={styles.menuItem}>
           <Ionicons name="document-text-outline" size={24} color="#764ba2" />
           <Text style={styles.menuText}>Termos e Condições</Text>
+          <Ionicons name="chevron-forward" size={20} color="#ccc" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem}>
+          <Ionicons name="lock-closed-outline" size={24} color="#764ba2" />
+          <Text style={styles.menuText}>Política de Privacidade</Text>
           <Ionicons name="chevron-forward" size={20} color="#ccc" />
         </TouchableOpacity>
       </View>
@@ -118,23 +130,68 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    backgroundColor: '#fff',
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+  },
+  header: {
+    backgroundColor: '#764ba2',
+    paddingTop: 48,
+    paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInfo: {
+    alignItems: 'center',
+  },
+  profileImageContainer: {
+    marginBottom: 15,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  profileImagePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 10,
+    color: '#fff',
+    marginBottom: 5,
   },
   email: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+    color: 'rgba(255,255,255,0.9)',
   },
   infoCard: {
     backgroundColor: '#fff',
