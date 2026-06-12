@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -117,6 +118,7 @@ export const RegisterScreen = ({ navigation }: any) => {
   };
 
   return (
+  <ImageBackground source={require('../assets/login.avif')} style={styles.background} resizeMode="cover" >
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -218,19 +220,24 @@ export const RegisterScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    
   },
   header: {
     alignItems: 'center',
     paddingTop: 50,
     paddingBottom: 30,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
@@ -247,7 +254,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
     marginTop: 5,
   },
   form: {
@@ -329,7 +336,7 @@ const styles = StyleSheet.create({
   loginText: {
     textAlign: 'center',
     marginTop: 20,
-    color: '#666',
+    color: '#fff',
   },
   loginLink: {
     color: '#764ba2',

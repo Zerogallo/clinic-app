@@ -267,7 +267,7 @@ export const ScheduleScreen = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="calendar" size={50} color="#764ba2" />
+        <Ionicons name="calendar" size={50} color="#fff" />
         <Text style={styles.title}>Agendar Serviço</Text>
         <Text style={styles.subtitle}>Escolha o serviço, data e horário</Text>
       </View>
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: '#764ba2',
     paddingTop: 40,
     paddingBottom: 30,
     alignItems: 'center',
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
     marginTop: 5,
     textAlign: 'center',
   },

@@ -144,7 +144,7 @@ export const ProductDetailScreen = () => {
 
         {/* Materials */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📋 Materiais Utilizados</Text>
+          <Text style={styles.sectionTitle}><Ionicons name="list" size={24} color="#764ba2" /> Materiais Utilizados</Text>
           <View style={styles.materialsGrid}>
             {product.materials.map((material, index) => (
               <View key={index} style={styles.materialItem}>
@@ -168,7 +168,7 @@ export const ProductDetailScreen = () => {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📝 Sobre o Procedimento</Text>
+          <Text style={styles.sectionTitle}><Ionicons name="document-text" size={24} color="#764ba2" /> Sobre o Procedimento</Text>
           <Text style={styles.description}>{product.description}</Text>
         </View>
 

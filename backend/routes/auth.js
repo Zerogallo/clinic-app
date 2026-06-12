@@ -8,10 +8,12 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
+// ==================== ROTAS DE AUTENTICAÇÃO ====================
+
 // Registrar novo usuário
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, phone, profileImage } = req.body;
+    const { name, email, password, phone } = req.body;
     logger.info(`📝 Tentativa de registro: ${email}`);
 
     if (!name || !email || !password) {
@@ -39,10 +41,8 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       phone: phone || '',
-      profileImage: profileImage || null,
       role: 'client',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     users.push(newUser);
@@ -54,23 +54,18 @@ router.post('/register', async (req, res) => {
     });
 
     const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role },
+      { userId: newUser.id, email: newUser.email, name: newUser.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     const { password: _, ...userWithoutPassword } = newUser;
     
-    res.status(200).json({
-      success: true,
-      message: 'Usuário registrado com sucesso',
-      user: userWithoutPassword,
-      token
-    });
+    res.success('USER_CREATED', { user: userWithoutPassword, token });
 
   } catch (error) {
     logger.error('Erro no registro', error);
-    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    res.error('INTERNAL_ERROR', error.message);
   }
 });
 
@@ -81,7 +76,7 @@ router.post('/login', async (req, res) => {
     logger.info(`🔐 Tentativa de login: ${email}`);
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'Campos obrigatórios' });
+      return res.error('MISSING_FIELDS');
     }
 
     const users = await readJSON('users.json');
@@ -89,18 +84,18 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       logger.warning(`Login falhou - usuário não encontrado: ${email}`);
-      return res.status(401).json({ success: false, error: 'Email ou senha inválidos' });
+      return res.error('INVALID_CREDENTIALS');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     
     if (!isValidPassword) {
       logger.warning(`Login falhou - senha incorreta: ${email}`);
-      return res.status(401).json({ success: false, error: 'Email ou senha inválidos' });
+      return res.error('INVALID_CREDENTIALS');
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name, role: user.role },
+      { userId: user.id, email: user.email, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -108,36 +103,31 @@ router.post('/login', async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
     
     logger.success(`Login bem-sucedido: ${email}`);
-    res.status(200).json({
-      success: true,
-      message: 'Login realizado com sucesso',
-      user: userWithoutPassword,
-      token
-    });
+    res.success('LOGIN_SUCCESS', { user: userWithoutPassword, token });
 
   } catch (error) {
     logger.error('Erro no login', error);
-    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    res.error('INTERNAL_ERROR', error.message);
   }
 });
 
-// Obter perfil do usuário
+// Obter perfil do usuário (rota protegida)
 router.get('/profile', require('../middleware/auth'), async (req, res) => {
   try {
     const users = await readJSON('users.json');
     const user = users.find(u => u.id === req.userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+      return res.error('USER_NOT_FOUND');
     }
 
     const { password: _, ...userWithoutPassword } = user;
     logger.success(`Perfil carregado: ${user.email}`);
-    res.status(200).json({ success: true, user: userWithoutPassword });
+    res.success('PROFILE_FETCHED', userWithoutPassword);
 
   } catch (error) {
     logger.error('Erro ao buscar perfil', error);
-    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    res.error('INTERNAL_ERROR', error.message);
   }
 });
 
@@ -146,48 +136,42 @@ router.get('/profile', require('../middleware/auth'), async (req, res) => {
 // Atualizar perfil completo
 router.put('/profile', require('../middleware/auth'), async (req, res) => {
   try {
-    const { name, email, phone, profileImage } = req.body;
+    const { name, email, phone } = req.body;
     const users = await readJSON('users.json');
     const userIndex = users.findIndex(u => u.id === req.userId);
 
     if (userIndex === -1) {
-      return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+      return res.error('USER_NOT_FOUND');
     }
 
     if (email && email !== users[userIndex].email) {
       const emailExists = users.some(u => u.email === email && u.id !== req.userId);
       if (emailExists) {
-        return res.status(400).json({ success: false, error: 'Email já está em uso' });
+        return res.error('EMAIL_ALREADY_EXISTS');
       }
     }
 
     if (name) users[userIndex].name = name;
     if (email) users[userIndex].email = email;
     if (phone !== undefined) users[userIndex].phone = phone;
-    if (profileImage !== undefined) users[userIndex].profileImage = profileImage;
 
     users[userIndex].updatedAt = new Date().toISOString();
 
     await writeJSON('users.json', users);
 
     const { password: _, ...userWithoutPassword } = users[userIndex];
-
     logger.success(`Perfil atualizado: ${userWithoutPassword.email}`);
-    res.status(200).json({
-      success: true,
-      message: 'Perfil atualizado com sucesso',
-      user: userWithoutPassword
-    });
+    res.success('PROFILE_UPDATED', userWithoutPassword);
 
   } catch (error) {
     logger.error('Erro ao atualizar perfil', error);
-    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+    res.error('INTERNAL_ERROR', error.message);
   }
 });
 
 // ==================== ROTAS DE FOTO DE PERFIL ====================
 
-// Atualizar foto de perfil - POST
+// Atualizar foto de perfil (POST)
 router.post('/profile/photo', require('../middleware/auth'), async (req, res) => {
   try {
     const { photo } = req.body;
@@ -217,7 +201,6 @@ router.post('/profile/photo', require('../middleware/auth'), async (req, res) =>
       message: 'Foto atualizada com sucesso',
       user: userWithoutPassword
     });
-
   } catch (error) {
     logger.error('Erro ao atualizar foto', error);
     return res.status(500).json({
@@ -227,7 +210,7 @@ router.post('/profile/photo', require('../middleware/auth'), async (req, res) =>
   }
 });
 
-// Atualizar foto de perfil - PUT (alternativa)
+// Atualizar foto de perfil (PUT - alternativa)
 router.put('/profile/photo', require('../middleware/auth'), async (req, res) => {
   try {
     const { photo } = req.body;
@@ -257,7 +240,6 @@ router.put('/profile/photo', require('../middleware/auth'), async (req, res) => 
       message: 'Foto atualizada com sucesso',
       user: userWithoutPassword
     });
-
   } catch (error) {
     logger.error('Erro ao atualizar foto (PUT)', error);
     return res.status(500).json({
@@ -296,7 +278,6 @@ router.delete('/profile/photo', require('../middleware/auth'), async (req, res) 
       message: 'Foto removida com sucesso',
       user: userWithoutPassword
     });
-
   } catch (error) {
     logger.error('Erro ao remover foto', error);
     return res.status(500).json({
@@ -305,6 +286,8 @@ router.delete('/profile/photo', require('../middleware/auth'), async (req, res) 
     });
   }
 });
+
+// ==================== ROTAS DE SENHA ====================
 
 // Atualizar senha
 router.patch('/profile/password', require('../middleware/auth'), async (req, res) => {
@@ -333,12 +316,13 @@ router.patch('/profile/password', require('../middleware/auth'), async (req, res
 
     logger.success(`Senha atualizada: ${users[userIndex].email}`);
     res.status(200).json({ success: true, message: 'Senha atualizada com sucesso' });
-
   } catch (error) {
     logger.error('Erro ao atualizar senha', error);
     res.status(500).json({ success: false, error: 'Erro interno do servidor' });
   }
 });
+
+// ==================== ROTAS DE EXCLUSÃO DE CONTA ====================
 
 // Deletar conta
 router.delete('/profile', require('../middleware/auth'), async (req, res) => {
@@ -354,17 +338,17 @@ router.delete('/profile', require('../middleware/auth'), async (req, res) => {
     users.splice(userIndex, 1);
     await writeJSON('users.json', users);
 
+    // Remove também os agendamentos do usuário
     try {
       const appointments = await readJSON('appointments.json');
       const filteredAppointments = appointments.filter(a => a.userId !== req.userId);
       await writeJSON('appointments.json', filteredAppointments);
     } catch (error) {
-      logger.warning('Erro ao remover agendamentos', error);
+      logger.warning('Erro ao remover agendamentos do usuário deletado', error);
     }
 
     logger.success(`Conta deletada: ${deletedUser.email}`);
     res.status(200).json({ success: true, message: 'Conta deletada com sucesso' });
-
   } catch (error) {
     logger.error('Erro ao deletar conta', error);
     res.status(500).json({ success: false, error: 'Erro interno do servidor' });

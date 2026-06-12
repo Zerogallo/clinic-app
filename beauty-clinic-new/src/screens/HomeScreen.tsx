@@ -8,6 +8,7 @@ import {
   Image,
   FlatList,
   Alert,
+  ImageBackground,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -287,25 +288,27 @@ export const HomeScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
-        <Text style={styles.welcomeText}>Olá, {user?.name?.split(' ')[0]}! 👋</Text>
+        <Text style={styles.welcomeText}>Olá, {user?.name?.split(' ')[0]}! </Text>
         <Text style={styles.tagline}>Descubra os melhores tratamentos para você</Text>
       </View>
 
       {/* Laser Highlight */}
       <View style={styles.laserHighlight}>
-        <View style={styles.laserIcon}>
-          <Ionicons name="flash" size={40} color="#FFD700" />
-        </View>
-        <View style={styles.laserInfo}>
-          <Text style={styles.laserTitle}>Tecnologia Exclusiva</Text>
-          <Text style={styles.laserName}>⚡ Laser O Switcher</Text>
-          <Text style={styles.laserDesc}>Tecnologia avançada para remoção segura e eficaz</Text>
-        </View>
+            <View style={styles.laserIcon}>
+              <Ionicons name="flash" size={40} color="#FFD700" />
+            </View>
+          <ImageBackground source={require('../assets/Beauty-Clinic.avif')} style={styles.laserImage} resizeMode="cover">
+            <View style={styles.laserInfo}>
+                <Text style={styles.laserTitle}>Tecnologia Exclusiva</Text>
+                <Text style={styles.laserName}>⚡ Laser O Switcher</Text>
+                <Text style={styles.laserDesc}>Tecnologia avançada para remoção segura e eficaz</Text>
+            </View>
+          </ImageBackground>
       </View>
 
       {/* Recomendados para você */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>✨ Recomendados para você</Text>
+        <Text style={styles.sectionTitle}><Ionicons name="sparkles" size={32} color="#FFD700" /> Recomendados para você</Text>
         <FlatList
           data={products}
           renderItem={renderProductCard}
@@ -318,7 +321,7 @@ export const HomeScreen = () => {
 
       {/* Mais populares */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔥 Mais Populares</Text>
+        <Text style={styles.sectionTitle}><Ionicons name="flame" size={32} color="#FF4500" /> Mais Populares</Text>
         <FlatList
           data={[...products].sort((a, b) => b.reviews - a.reviews).slice(0, 5)}
           renderItem={renderProductCard}
@@ -389,7 +392,7 @@ const styles = StyleSheet.create({
     margin: 15,
     padding: 20,
     borderRadius: 15,
-    flexDirection: 'row',
+    flexDirection:'row',
     alignItems: 'center',
     shadowColor: '#764ba2',
     shadowOffset: { width: 0, height: 2 },
@@ -406,12 +409,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 15,
   },
+  laserImage: {
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+  },
   laserInfo: {
     flex: 1,
   },
   laserTitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#212020',
   },
   laserName: {
     fontSize: 18,
@@ -421,7 +430,7 @@ const styles = StyleSheet.create({
   },
   laserDesc: {
     fontSize: 12,
-    color: '#999',
+    color: '#363535',
   },
   section: {
     marginTop: 15,

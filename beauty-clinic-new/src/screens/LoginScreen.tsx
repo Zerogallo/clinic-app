@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  ImageBackground,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,6 +46,7 @@ export const LoginScreen = ({ navigation }: any) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ImageBackground source={require('../assets/login.avif')} style={styles.background} resizeMode="cover" >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <Ionicons name="sparkles" size={60} color="#764ba2" />
@@ -95,29 +97,27 @@ export const LoginScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        {/* Dados para teste */}
-        <View style={styles.testData}>
-          <Text style={styles.testTitle}>Dados para teste:</Text>
-          <Text style={styles.testText}>📧 admin@beautyclinic.com</Text>
-          <Text style={styles.testText}>🔑 admin123</Text>
-          <Text style={styles.testSeparator}>ou</Text>
-          <Text style={styles.testText}>📧 cliente@teste.com</Text>
-          <Text style={styles.testText}>🔑 cliente123</Text>
-        </View>
+      
       </ScrollView>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
+    top: 250,
   },
   header: {
     alignItems: 'center',
@@ -131,15 +131,15 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
     marginTop: 5,
     textAlign: 'center',
   },
   form: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: '#7b7979',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -184,27 +184,5 @@ const styles = StyleSheet.create({
     color: '#764ba2',
     fontWeight: 'bold',
   },
-  testData: {
-    marginTop: 30,
-    padding: 15,
-    backgroundColor: '#f0e6ff',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  testTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#764ba2',
-    marginBottom: 8,
-  },
-  testText: {
-    fontSize: 12,
-    color: '#666',
-    marginVertical: 2,
-  },
-  testSeparator: {
-    fontSize: 12,
-    color: '#999',
-    marginVertical: 4,
-  },
+  
 });

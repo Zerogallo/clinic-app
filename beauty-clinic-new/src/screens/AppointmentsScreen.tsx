@@ -263,7 +263,7 @@ export const AppointmentsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="list-circle-outline" size={40} color="#764ba2" />
+        <Ionicons name="list-circle-outline" size={40} color="#fff" />
         <Text style={styles.title}>Meus Agendamentos</Text>
         <Text style={styles.subtitle}>
           {appointments.length} {appointments.length === 1 ? 'agendamento encontrado' : 'agendamentos encontrados'}
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: '#764ba2',
     padding: 30,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#fff',
     marginTop: 5,
   },
   listContainer: {
